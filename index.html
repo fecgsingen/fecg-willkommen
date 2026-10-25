@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Willkommen in der FECG Singen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#0a0d17">
+<style>
+/* Willkommenskarte fürs Gäste-WLAN. Designsprache des FECG-Archivs (Navy, Regenbogen, Inter, gesperrte Großbuchstaben).
+   Aufbau: eine Karte in Handybreite, mittig auf dem Navy-Hintergrund. */
+@font-face { font-family: "InterFECG"; src: url(inter-500.woff2) format("woff2"); font-weight: 400 500; font-display: swap; }
+@font-face { font-family: "InterFECG"; src: url(inter-600.woff2) format("woff2"); font-weight: 600 700; font-display: swap; }
+
+:root {
+  --navy0: #0a0d17;
+  --navy1: #1d2848;
+  --karte: rgba(20, 27, 49, .72);
+  --text: #ffffff;
+  --muted: #c3c9da;
+  --leise: #8a93ad;
+  --linie: rgba(195, 201, 218, .14);
+  --rot: #e86a5a; --cyan: #3bb2e0; --gruen: #46c85a; --gelb: #d6d446; --blau: #5a8ce6; --lila: #aa5adc;
+  --regenbogen: linear-gradient(90deg, var(--rot) 0 16.66%, var(--cyan) 16.66% 33.33%, var(--gruen) 33.33% 50%, var(--gelb) 50% 66.66%, var(--blau) 66.66% 83.33%, var(--lila) 83.33%);
+  --schrift: "InterFECG", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { background: var(--navy0); }
+body {
+  margin: 0; min-height: 100vh; background: var(--navy0); color: var(--text);
+  font: 500 16px/1.5 var(--schrift); -webkit-font-smoothing: antialiased;
+  display: flex; flex-direction: column; align-items: center;
+  padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  overflow-x: hidden;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 4px; }
+
+.hintergrund {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 5%, rgba(77, 115, 217, .38), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 90% 60%, rgba(77, 66, 158, .34), transparent 70%),
+    radial-gradient(ellipse 70% 45% at 50% 110%, rgba(51, 76, 150, .32), transparent 70%),
+    radial-gradient(ellipse 80% 80% at 50% 40%, var(--navy0) 0%, var(--navy1) 100%);
+}
+
+/* Sprachwahl */
+.sprachen { width: 100%; max-width: 420px; display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 14px; }
+.sprachen button {
+  background: none; border: 1px solid var(--linie); border-radius: 999px;
+  padding: 4px 11px; font-size: 12px; font-weight: 600; letter-spacing: .12em; color: var(--leise);
+  transition: color .2s, border-color .2s, background .2s;
+}
+.sprachen button[aria-pressed="true"] { color: var(--text); border-color: rgba(195, 201, 218, .45); background: rgba(195, 201, 218, .08); }
+
+/* Karte */
+.buehne { width: 100%; max-width: 420px; perspective: 1200px; }
+.karte {
+  position: relative; overflow: hidden;
+  background: var(--karte);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--linie); border-radius: 18px;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .7), 0 0 0 1px rgba(255, 255, 255, .03) inset;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--kx, 0deg)) rotateY(var(--ky, 0deg));
+  transition: transform .5s cubic-bezier(.2, .7, .2, 1);
+  animation: auftauchen 1s cubic-bezier(.2, .8, .2, 1) both;
+}
+@keyframes auftauchen { from { opacity: 0; transform: translateY(40px) rotateX(18deg) scale(.96); } to { opacity: 1; transform: none; } }
+
+/* Ein Glanz läuft einmal über die Karte, wenn sie aufgebaut ist */
+.karte::after {
+  content: ""; position: absolute; inset: -40% -60%; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, .10) 48%, rgba(120, 190, 255, .10) 52%, transparent 58%);
+  transform: translateX(-60%); animation: glanz 1.6s 1.9s ease-out both;
+}
+@keyframes glanz { to { transform: translateX(60%); } }
+
+.kopf { position: relative; padding: 26px 24px 22px; display: grid; justify-items: center; gap: 18px; }
+.kopf::after { content: ""; position: absolute; left: 24px; right: 24px; bottom: 0; height: 3px; border-radius: 2px; background: var(--regenbogen); transform-origin: left; animation: band 1s 1.2s cubic-bezier(.6, 0, .2, 1) both; }
+@keyframes band { from { transform: scaleX(0); } }
+
+
+.logo { width: 190px; max-width: 70%; height: auto; display: block; animation: einblenden .9s .3s both; }
+
+.verbunden {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+  animation: einblenden .6s 1.4s both;
+}
+.punkt { width: 8px; height: 8px; border-radius: 50%; background: var(--gruen); box-shadow: 0 0 0 0 rgba(70, 200, 90, .6); animation: puls 2.2s 2s infinite; }
+@keyframes puls { 70% { box-shadow: 0 0 0 9px rgba(70, 200, 90, 0); } 100% { box-shadow: 0 0 0 0 rgba(70, 200, 90, 0); } }
+
+@keyframes einblenden { from { opacity: 0; transform: translateY(8px); } }
+
+.inhalt { padding: 26px 24px 8px; display: grid; gap: 24px; }
+.inhalt > * { animation: einblenden .7s both; }
+.inhalt > :nth-child(1) { animation-delay: 1.5s; }
+.inhalt > :nth-child(2) { animation-delay: 1.65s; }
+.inhalt > :nth-child(3) { animation-delay: 1.8s; }
+.inhalt > :nth-child(4) { animation-delay: 1.95s; }
+
+.gruss h1 { margin: 0; font-size: clamp(28px, 8.4vw, 36px); line-height: 1.08; font-weight: 600; letter-spacing: -.01em; text-wrap: balance; }
+.zeile { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--leise); font-variant-numeric: tabular-nums; }
+.zeile .besuch { color: var(--gelb); }
+
+.etikett { margin: 0 0 10px; font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--leise); }
+
+.vers { margin: 0; padding: 18px 18px 16px; border-radius: 12px; background: linear-gradient(135deg, rgba(90, 140, 230, .16), rgba(170, 90, 220, .12)); border: 1px solid rgba(140, 160, 230, .22); }
+.vers blockquote { margin: 0; font-size: 18px; line-height: 1.45; font-weight: 500; text-wrap: pretty; }
+.vers figcaption { margin-top: 10px; font-size: 13px; color: var(--muted); letter-spacing: .04em; }
+
+
+.aktion {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 15px 18px; border-radius: 12px; text-decoration: none;
+  background: rgba(195, 201, 218, .07); border: 1px solid rgba(195, 201, 218, .2);
+  transition: background .2s, border-color .2s, transform .2s;
+}
+.aktion:hover { background: rgba(195, 201, 218, .12); border-color: rgba(195, 201, 218, .35); transform: translateY(-1px); }
+.aktion b { display: block; font-weight: 600; }
+.aktion small { display: block; color: var(--leise); font-size: 13px; }
+.aktion svg { flex: none; }
+
+.fuss { padding: 18px 24px 22px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--leise); animation: einblenden .7s 2.1s both; }
+
+.aktion { position: relative; overflow: hidden; }
+.fortschritt { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--regenbogen); transform-origin: left; transform: scaleX(0); }
+.fortschritt.laeuft { transform: scaleX(1); transition: transform var(--dauer, 8s) linear; }
+
+/* Auf dem Handy füllt die Karte den ganzen Bildschirm */
+@media (max-width: 500px) {
+  body { padding-block: 0; padding-left: 0; padding-right: 0; justify-content: stretch; }
+  .sprachen { position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); width: auto; z-index: 2; margin: 0; }
+  .buehne { max-width: none; flex: 1; display: flex; }
+  .karte { flex: 1; display: flex; flex-direction: column; border-radius: 0; border: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); min-height: 100dvh; }
+  .kopf { padding-top: 64px; }
+  .inhalt { flex: 1; align-content: center; padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .karte { transform: none !important; }
+}
+</style>
+</head>
+<body>
+<div class="hintergrund" aria-hidden="true"></div>
+
+<nav class="sprachen" aria-label="Sprache">
+  <button type="button" id="sprache-de" data-sprache="de" aria-pressed="true">DE</button>
+  <button type="button" id="sprache-ru" data-sprache="ru" aria-pressed="false">RU</button>
+  <button type="button" id="sprache-en" data-sprache="en" aria-pressed="false">EN</button>
+</nav>
+
+<main class="buehne">
+  <article class="karte" id="karte">
+    <header class="kopf">
+      <img class="logo" src="logo.png" alt="FECG Singen" width="480" height="198">
+      <div class="verbunden"><span class="punkt" aria-hidden="true"></span><span data-t="verbunden"></span></div>
+    </header>
+
+    <div class="inhalt">
+      <section class="gruss">
+        <h1 data-t="titel"></h1>
+        <div class="zeile"><span id="datum"></span><span class="besuch" id="besuch"></span></div>
+      </section>
+
+      <figure class="vers">
+        <p class="etikett" data-t="vers-etikett"></p>
+        <blockquote id="vers-text"></blockquote>
+        <figcaption id="vers-stelle"></figcaption>
+      </figure>
+
+
+      <a class="aktion" id="weiter" href="https://fecg-singen-archiv.tail254e97.ts.net">
+        <div><b data-t="archiv"></b><small id="countdown"></small></div>
+        <span class="fortschritt" id="fortschritt" aria-hidden="true"></span>
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 4l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+
+    <footer class="fuss"><span>FECG Singen</span><span data-t="netz"></span></footer>
+  </article>
+</main>
+
+
+<script>
+(function () {
+  var T = {
+    de: {
+      verbunden: "Du bist online",
+      titel: "Herzlich willkommen!",
+      "vers-etikett": "Ein Wort für heute",
+      archiv: "Weiter zum Predigtarchiv", gleich: function (n) { return "Geht in " + n + " s automatisch weiter"; },
+      netz: "Gäste-WLAN",
+      erster: "Erster Besuch", besuch: function (n) { return n + ". Besuch"; },
+      tage: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+      monate: ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
+      datum: function (d, t, m) { return t[d.getDay()] + ", " + d.getDate() + ". " + m[d.getMonth()]; }
+    },
+    ru: {
+      verbunden: "Вы в сети",
+      titel: "Добро пожаловать!",
+      "vers-etikett": "Слово на сегодня",
+      archiv: "Перейти в архив проповедей", gleich: function (n) { return "Автоматический переход через " + n + " с"; },
+      netz: "Гостевой Wi-Fi",
+      erster: "Первый визит", besuch: function (n) { return n + "-й визит"; },
+      tage: ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"],
+      monate: ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"],
+      datum: function (d, t, m) { return t[d.getDay()] + ", " + d.getDate() + " " + m[d.getMonth()]; }
+    },
+    en: {
+      verbunden: "You're online",
+      titel: "Welcome!",
+      "vers-etikett": "A word for today",
+      archiv: "Continue to the sermon archive", gleich: function (n) { return "Continuing automatically in " + n + " s"; },
+      netz: "Guest Wi-Fi",
+      erster: "First visit", besuch: function (n) { return "Visit no. " + n; },
+      tage: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      monate: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+      datum: function (d, t, m) { return t[d.getDay()] + ", " + m[d.getMonth()] + " " + d.getDate(); }
+    }
+  };
+
+  // Gemeinfreie Übersetzungen: Luther 1912, Synodalbibel, King James
+  var VERSE = [
+    { de: ["Darum nehmet euch untereinander auf, gleichwie euch Christus hat aufgenommen zu Gottes Lobe.", "Römer 15,7"],
+      ru: ["Посему принимайте друг друга, как и Христос принял вас в славу Божию.", "Римлянам 15:7"],
+      en: ["Wherefore receive ye one another, as Christ also received us to the glory of God.", "Romans 15:7"] },
+    { de: ["Dies ist der Tag, den der HERR macht; lasset uns freuen und fröhlich darin sein.", "Psalm 118,24"],
+      ru: ["Сей день сотворил Господь: возрадуемся и возвеселимся в оный!", "Псалом 117:24"],
+      en: ["This is the day which the LORD hath made; we will rejoice and be glad in it.", "Psalm 118:24"] },
+    { de: ["Kommet her zu mir alle, die ihr mühselig und beladen seid; ich will euch erquicken.", "Matthäus 11,28"],
+      ru: ["Придите ко Мне все труждающиеся и обремененные, и Я успокою вас.", "Матфея 11:28"],
+      en: ["Come unto me, all ye that labour and are heavy laden, and I will give you rest.", "Matthew 11:28"] },
+    { de: ["Der HERR segne dich und behüte dich.", "4. Mose 6,24"],
+      ru: ["Да благословит тебя Господь и сохранит тебя!", "Числа 6:24"],
+      en: ["The LORD bless thee, and keep thee.", "Numbers 6:24"] }
+  ];
+
+  function lesen(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function schreiben(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  // Besuche zählen (nur auf dem Gerät des Gastes, höchstens einmal pro Tag)
+  var heute = new Date().toISOString().slice(0, 10);
+  var besuche = parseInt(lesen("fecg-besuche") || "0", 10) || 0;
+  if (lesen("fecg-letzter-tag") !== heute) { besuche += 1; schreiben("fecg-besuche", String(besuche)); schreiben("fecg-letzter-tag", heute); }
+
+  var start = Math.floor(Date.now() / 864e5);
+  var vers = VERSE[start % VERSE.length];
+
+  var gewaehlt = lesen("fecg-sprache");
+  if (!T[gewaehlt]) gewaehlt = /^ru/i.test(navigator.language || "") ? "ru" : /^de/i.test(navigator.language || "") ? "de" : (navigator.language ? "en" : "de");
+
+  var aktuell = gewaehlt;
+  function zeigen(s) {
+    aktuell = s;
+    var t = T[s], d = new Date();
+    if (typeof rest === "number") document.getElementById("countdown").textContent = t.gleich(rest);
+    document.documentElement.lang = s;
+    document.querySelectorAll("[data-t]").forEach(function (el) { el.textContent = t[el.getAttribute("data-t")]; });
+    document.getElementById("datum").textContent = t.datum(d, t.tage, t.monate);
+    document.getElementById("besuch").textContent = besuche <= 1 ? t.erster : t.besuch(besuche);
+    document.getElementById("vers-text").textContent = vers[s][0];
+    document.getElementById("vers-stelle").textContent = vers[s][1];
+    document.querySelectorAll(".sprachen button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-sprache") === s)); });
+  }
+  document.querySelectorAll(".sprachen button").forEach(function (b) {
+    b.addEventListener("click", function () { var s = b.getAttribute("data-sprache"); schreiben("fecg-sprache", s); zeigen(s); });
+  });
+  zeigen(gewaehlt);
+
+  // Nach ein paar Sekunden automatisch weiter ins Predigtarchiv
+  var SEKUNDEN = 8, rest = SEKUNDEN;
+  var ziel = document.getElementById("weiter").href;
+  function zaehlen() { document.getElementById("countdown").textContent = T[aktuell].gleich(rest); }
+  zaehlen();
+  setTimeout(function () {
+    var balken = document.getElementById("fortschritt");
+    balken.style.setProperty("--dauer", SEKUNDEN + "s");
+    balken.classList.add("laeuft");
+    var uhr = setInterval(function () {
+      rest -= 1;
+      if (rest <= 0) { clearInterval(uhr); if (!/[?&]bleiben/.test(location.search)) location.href = ziel; return; }
+      zaehlen();
+    }, 1000);
+  }, 1200);
+
+  // Karte neigt sich leicht zum Finger oder zur Maus
+  var karte = document.getElementById("karte");
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    karte.addEventListener("animationend", function fertig(e) {
+      if (e.target !== karte) return;
+      karte.removeEventListener("animationend", fertig);
+      karte.style.animation = "none";
+    });
+    window.addEventListener("pointermove", function (e) {
+      var r = karte.getBoundingClientRect();
+      var x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+      karte.style.setProperty("--ky", (Math.max(-.5, Math.min(.5, x)) * 8).toFixed(2) + "deg");
+      karte.style.setProperty("--kx", (Math.max(-.5, Math.min(.5, y)) * -6).toFixed(2) + "deg");
+    });
+    document.addEventListener("pointerleave", function () { karte.style.setProperty("--kx", "0deg"); karte.style.setProperty("--ky", "0deg"); });
+  }
+})();
+</script>
+</body>
+</html>
