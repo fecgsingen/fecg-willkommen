@@ -1,0 +1,27 @@
+# Mergt jeden PR automatisch (Squash), sobald er geöffnet oder aktualisiert wird.
+# Nur PRs aus diesem Repo selbst (keine Forks), keine Entwürfe.
+# Abschalten: Label "nicht-mergen" an den PR hängen oder PR als Entwurf öffnen.
+name: Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, unlabeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !github.event.pull_request.draft &&
+      !contains(github.event.pull_request.labels.*.name, 'nicht-mergen')
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR mergen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: gh pr merge "$PR" --repo "$REPO" --squash
