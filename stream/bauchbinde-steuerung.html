@@ -4,29 +4,101 @@
 <meta charset="utf-8">
 <title>Bauchbinde</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
 <style>
-/* OBS-Dock (Ansicht → Docks → Benutzerdefinierte Browser-Docks). Muss vom selben Ursprung kommen wie szenen.html. */
-:root { --navy0: #0a0d17; --karte: #141b31; --text: #fff; --leise: #8a93ad; --linie: rgba(195,201,218,.16); --cyan: #3bb2e0; --rot: #e86a5a; }
+/* OBS-Dock (Docks → Benutzerdefinierte Browser-Docks). Muss vom selben Ursprung kommen wie szenen.html. */
+:root {
+  --navy0: #0a0d17; --flaeche: #121930; --feld: #0d1222; --text: #fff; --muted: #c3c9da; --leise: #8a93ad;
+  --linie: rgba(195,201,218,.14); --blau: #5a8ce6; --rot: #e86a5a; --gruen: #46c85a;
+  --regenbogen: linear-gradient(90deg, #e86a5a 0 16.66%, #3bb2e0 16.66% 33.33%, #46c85a 33.33% 50%, #d6d446 50% 66.66%, #5a8ce6 66.66% 83.33%, #aa5adc 83.33%);
+}
 * { box-sizing: border-box; }
-body { margin: 0; padding: 12px; background: var(--navy0); color: var(--text); font: 500 14px/1.4 system-ui, "Segoe UI", sans-serif; }
-h1 { margin: 0 0 10px; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--leise); }
-.zeile { display: flex; gap: 6px; margin-bottom: 6px; }
-input { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--linie); background: var(--karte); color: var(--text); font: inherit; }
-input[type=number] { flex: 0 0 64px; }
-button { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--linie); background: var(--karte); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; }
-button.an { background: var(--cyan); border-color: var(--cyan); color: #04121a; }
-button.aus { border-color: var(--rot); color: var(--rot); }
-.liste { display: grid; gap: 6px; margin-top: 12px; }
-.liste button { text-align: left; font-weight: 500; }
-.liste small { color: var(--leise); margin-left: 6px; }
+html, body { margin: 0; }
+body { background: var(--navy0); color: var(--text); font: 500 15px/1.4 "Inter", system-ui, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+.rand { height: 3px; background: var(--regenbogen); }
+main { max-width: 560px; margin: 0 auto; padding: 16px 16px 24px; display: grid; gap: 16px; }
+
+.kopf { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+h1 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -.01em; }
+.stand { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; color: var(--leise); }
+.stand::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: #3a4260; }
+.stand.live { color: var(--text); }
+.stand.live::before { background: var(--rot); box-shadow: 0 0 0 4px rgba(232,106,90,.22); }
+.stand span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+label { display: grid; gap: 6px; font-size: 12px; font-weight: 600; color: var(--leise); letter-spacing: .04em; }
+input[type=text] { width: 100%; height: 48px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--linie); background: var(--feld); color: var(--text); font: 500 17px/1 inherit; font-family: inherit; outline: none; transition: border-color .15s, box-shadow .15s; }
+input[type=text]::placeholder { color: #5c6583; }
+input[type=text]:focus { border-color: var(--blau); box-shadow: 0 0 0 3px rgba(90,140,230,.25); }
+.felder { display: grid; gap: 12px; }
+
+.dauer { display: grid; gap: 6px; }
+.dauer > span { font-size: 12px; font-weight: 600; color: var(--leise); letter-spacing: .04em; }
+.wahl { display: grid; grid-template-columns: repeat(4, 1fr); padding: 3px; border-radius: 12px; background: var(--feld); border: 1px solid var(--linie); }
+.wahl button { height: 36px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: 600 14px/1 inherit; font-family: inherit; cursor: pointer; }
+.wahl button[aria-pressed=true] { background: #26304f; color: var(--text); }
+
+.knoepfe { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+.gross { height: 60px; border-radius: 14px; border: 1px solid transparent; font: 600 17px/1 inherit; font-family: inherit; cursor: pointer; transition: transform .08s, filter .15s, background .15s; }
+.gross:active { transform: scale(.98); }
+#zeigen { background: var(--blau); color: #fff; }
+#zeigen:hover { filter: brightness(1.08); }
+#zeigen:disabled { background: #232b45; color: #5c6583; cursor: default; filter: none; }
+#aus { background: transparent; border-color: var(--linie); color: var(--muted); }
+#aus:hover { background: var(--flaeche); color: var(--text); }
+button:focus-visible { outline: 2px solid var(--blau); outline-offset: 2px; }
+
+.gemerkt { display: grid; gap: 8px; }
+.gemerkt-kopf { display: flex; align-items: center; justify-content: space-between; }
+.gemerkt-kopf span { font-size: 12px; font-weight: 600; color: var(--leise); letter-spacing: .04em; }
+#merken { height: 32px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--linie); background: transparent; color: var(--muted); font: 600 13px/1 inherit; font-family: inherit; cursor: pointer; }
+#merken:hover { background: var(--flaeche); color: var(--text); }
+#merken:disabled { opacity: .4; cursor: default; }
+.liste { display: grid; gap: 6px; }
+.eintrag { display: flex; align-items: stretch; border-radius: 12px; background: var(--flaeche); border: 1px solid var(--linie); overflow: hidden; }
+.eintrag .los { flex: 1; min-width: 0; padding: 10px 14px; border: 0; background: transparent; color: var(--text); text-align: left; font: inherit; cursor: pointer; }
+.eintrag .los:hover { background: #18203b; }
+.eintrag b { display: block; font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eintrag small { display: block; font-size: 13px; color: var(--leise); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eintrag small:empty { display: none; }
+.eintrag .weg { flex: none; width: 44px; border: 0; border-left: 1px solid var(--linie); background: transparent; color: var(--leise); font-size: 18px; cursor: pointer; }
+.eintrag .weg:hover { color: var(--rot); background: #18203b; }
+.leer { margin: 0; padding: 14px; border-radius: 12px; border: 1px dashed var(--linie); color: var(--leise); font-size: 13px; }
 </style>
 </head>
 <body>
-<h1>Bauchbinde</h1>
-<div class="zeile"><input id="name" placeholder="Name, z. B. Johannes Schmidt"></div>
-<div class="zeile"><input id="rolle" placeholder="Rolle, z. B. Predigt · Johannes 1"><input id="dauer" type="number" min="0" value="8" title="Sekunden, 0 = bleibt stehen"></div>
-<div class="zeile"><button class="an" id="zeigen">Einblenden</button><button class="aus" id="aus">Ausblenden</button><button id="merken">Merken</button></div>
-<div class="liste" id="liste"></div>
+<div class="rand"></div>
+<main>
+  <div class="kopf">
+    <h1>Bauchbinde</h1>
+    <div class="stand" id="stand"><span>Nichts eingeblendet</span></div>
+  </div>
+
+  <div class="felder">
+    <label>Name<input type="text" id="name" placeholder="z. B. Johannes Schmidt" autocomplete="off"></label>
+    <label>Zeile darunter<input type="text" id="rolle" placeholder="z. B. Predigt · Johannes 1" autocomplete="off"></label>
+  </div>
+
+  <div class="dauer">
+    <span>Bleibt stehen für</span>
+    <div class="wahl" id="wahl">
+      <button type="button" data-s="5">5 s</button>
+      <button type="button" data-s="8">8 s</button>
+      <button type="button" data-s="12">12 s</button>
+      <button type="button" data-s="0">Dauerhaft</button>
+    </div>
+  </div>
+
+  <div class="knoepfe">
+    <button type="button" class="gross" id="zeigen">Einblenden</button>
+    <button type="button" class="gross" id="aus">Ausblenden</button>
+  </div>
+
+  <div class="gemerkt">
+    <div class="gemerkt-kopf"><span>Gemerkt</span><button type="button" id="merken">Aktuellen Text merken</button></div>
+    <div class="liste" id="liste"></div>
+  </div>
+</main>
 <script>
 const $ = (id) => document.getElementById(id);
 let kanal; try { kanal = new BroadcastChannel('fecg-stream'); } catch {}
@@ -35,26 +107,60 @@ function senden(b) {
   kanal?.postMessage(b);
   try { localStorage.setItem('fecg-stream', JSON.stringify(b)); } catch {}
 }
-const aktuell = () => ({ name: $('name').value.trim(), rolle: $('rolle').value.trim(), dauer: Number($('dauer').value) || 0 });
-$('zeigen').onclick = () => senden({ typ: 'zeigen', ...aktuell() });
-$('aus').onclick = () => senden({ typ: 'aus' });
+const lesen = (k, ersatz) => { try { return JSON.parse(localStorage.getItem(k)) ?? ersatz; } catch { return ersatz; } };
+const schreiben = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
 
-// gemerkte Einträge (Prediger, Moderation …) bleiben im Dock gespeichert
-const laden = () => { try { return JSON.parse(localStorage.getItem('fecg-stream-liste')) || []; } catch { return []; } };
-const sichern = (l) => { try { localStorage.setItem('fecg-stream-liste', JSON.stringify(l)); } catch {} };
+// Dauer
+let dauer = Number(lesen('fecg-stream-dauer', 8));
+function dauerZeichnen() { for (const b of $('wahl').children) b.setAttribute('aria-pressed', String(Number(b.dataset.s) === dauer)); }
+$('wahl').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; dauer = Number(b.dataset.s); schreiben('fecg-stream-dauer', dauer); dauerZeichnen(); };
+dauerZeichnen();
+
+// Stand oben rechts
+let standTimer;
+function stand(name) {
+  clearTimeout(standTimer);
+  const s = $('stand'); s.classList.toggle('live', !!name);
+  s.firstElementChild.textContent = name ? 'Eingeblendet: ' + name : 'Nichts eingeblendet';
+}
+const aktuell = () => ({ name: $('name').value.trim(), rolle: $('rolle').value.trim(), dauer });
+function einblenden() {
+  const a = aktuell(); if (!a.name) { $('name').focus(); return; }
+  senden({ typ: 'zeigen', ...a }); stand(a.name);
+  if (a.dauer > 0) standTimer = setTimeout(() => stand(''), a.dauer * 1000 + 600);
+}
+function ausblenden() { senden({ typ: 'aus' }); stand(''); }
+$('zeigen').onclick = einblenden;
+$('aus').onclick = ausblenden;
+const knoepfe = () => { const leer = !$('name').value.trim(); $('zeigen').disabled = leer; $('merken').disabled = leer; };
+for (const f of [$('name'), $('rolle')]) {
+  f.addEventListener('input', knoepfe);
+  f.addEventListener('keydown', (e) => { if (e.key === 'Enter') einblenden(); if (e.key === 'Escape') ausblenden(); });
+}
+knoepfe();
+
+// Gemerkte Texte (Prediger, Moderation, Kollekte …) bleiben auf diesem Rechner gespeichert
+const liste = () => lesen('fecg-stream-liste', []);
 function zeichnen() {
   const box = $('liste'); box.textContent = '';
-  laden().forEach((e, i) => {
-    const b = document.createElement('button');
-    b.innerHTML = '';
-    b.append(e.name); const s = document.createElement('small'); s.textContent = e.rolle; b.append(s);
-    b.onclick = () => { $('name').value = e.name; $('rolle').value = e.rolle; senden({ typ: 'zeigen', ...aktuell() }); };
-    b.oncontextmenu = (ev) => { ev.preventDefault(); const l = laden(); l.splice(i, 1); sichern(l); zeichnen(); };
-    b.title = 'Klick: einblenden · Rechtsklick: löschen';
-    box.append(b);
+  const l = liste();
+  if (!l.length) { const t = document.createElement('p'); t.className = 'leer'; t.textContent = 'Noch nichts gemerkt. Namen eintippen und „Aktuellen Text merken“ drücken, dann reicht beim nächsten Mal ein Klick.'; box.append(t); return; }
+  l.forEach((e, i) => {
+    const z = document.createElement('div'); z.className = 'eintrag';
+    const los = document.createElement('button'); los.type = 'button'; los.className = 'los'; los.title = 'Einblenden';
+    const b = document.createElement('b'); b.textContent = e.name; const s = document.createElement('small'); s.textContent = e.rolle || '';
+    los.append(b, s);
+    los.onclick = () => { $('name').value = e.name; $('rolle').value = e.rolle || ''; knoepfe(); einblenden(); };
+    const weg = document.createElement('button'); weg.type = 'button'; weg.className = 'weg'; weg.textContent = '×'; weg.title = 'Aus der Liste löschen'; weg.setAttribute('aria-label', e.name + ' löschen');
+    weg.onclick = () => { const n = liste(); n.splice(i, 1); schreiben('fecg-stream-liste', n); zeichnen(); };
+    z.append(los, weg); box.append(z);
   });
 }
-$('merken').onclick = () => { const a = aktuell(); if (!a.name) return; const l = laden().filter((e) => e.name !== a.name || e.rolle !== a.rolle); l.unshift({ name: a.name, rolle: a.rolle }); sichern(l.slice(0, 12)); zeichnen(); };
+$('merken').onclick = () => {
+  const a = aktuell(); if (!a.name) return;
+  const l = liste().filter((e) => e.name !== a.name || (e.rolle || '') !== a.rolle);
+  l.unshift({ name: a.name, rolle: a.rolle }); schreiben('fecg-stream-liste', l.slice(0, 12)); zeichnen();
+};
 zeichnen();
 </script>
 </body>
