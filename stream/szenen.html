@@ -29,6 +29,9 @@ body[data-szene="bauchbinde"] #s-bauchbinde, body[data-szene="ecke"] #s-ecke { d
 
 /* ---------- Bauchbinde ---------- */
 .binde { position: absolute; left: 110px; bottom: 120px; display: flex; align-items: stretch; filter: drop-shadow(0 12px 30px rgba(0,0,0,.35)); }
+/* 14.11.2026: ohne .an/.aus ist nichts zu sehen (vorher blieb der dunkle Kasten der Würfel stehen) */
+.binde { visibility: hidden; }
+.binde.an, .binde.aus { visibility: visible; }
 .binde .wuerfel { width: 108px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 14px; background: rgba(10,13,23,.88); border-radius: 14px 0 0 14px; align-content: center; }
 .binde .wuerfel i { aspect-ratio: 1; border-radius: 3px; transform: scale(0); }
 .binde .karte { position: relative; padding: 22px 46px 24px 34px; background: rgba(10,13,23,.82); backdrop-filter: blur(12px); border-radius: 0 14px 14px 0; clip-path: inset(0 100% 0 0); min-width: 420px; }
@@ -43,6 +46,27 @@ body[data-szene="bauchbinde"] #s-bauchbinde, body[data-szene="ecke"] #s-ecke { d
 @keyframes plopp { from { transform: scale(0) rotate(-30deg); } to { transform: scale(1) rotate(0); } }
 @keyframes aufziehen { to { clip-path: inset(0 0 0 0); } }
 @keyframes zuziehen { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 100% 0 0); } }
+
+/* ---------- Bauchbinde, ruhige Fassung (?design=2): eine Platte wie die Logo-Ecke, schmaler Farbstreifen links ---------- */
+.binde.neu { left: 96px; bottom: 96px; filter: none; }
+.binde.neu .wuerfel { display: none; }
+.binde.neu .streifen { display: block; }
+.binde .streifen { display: none; flex: none; width: 6px; border-radius: 3px; transform: scaleY(0); background: linear-gradient(180deg, var(--rot) 0 16.66%, var(--cyan) 16.66% 33.33%, var(--gruen) 33.33% 50%, var(--gelb) 50% 66.66%, var(--blau) 66.66% 83.33%, var(--lila) 83.33%); }
+.binde.neu .karte { display: flex; align-items: stretch; gap: 24px; min-width: 0; padding: 20px 40px 22px 22px; border-radius: 18px; background: rgba(10,13,23,.86); backdrop-filter: none; box-shadow: 0 10px 30px rgba(0,0,0,.30); clip-path: none; opacity: 0; }
+.binde.neu .karte::after { content: none; }
+.binde.neu .text { overflow: hidden; }
+.binde.neu .name { font-size: 44px; font-weight: 600; line-height: 1.15; letter-spacing: -.012em; }
+.binde.neu .rolle { margin-top: 6px; font-size: 24px; font-weight: 500; line-height: 1.2; letter-spacing: .01em; text-transform: none; color: var(--muted); }
+.binde.neu.an .karte { animation: nrein .6s cubic-bezier(.2,.7,.2,1) forwards; }
+.binde.neu.an .streifen { animation: nstreif .6s .15s cubic-bezier(.2,.7,.2,1) forwards; }
+.binde.neu.an .name, .binde.neu.an .rolle { animation: ntext .55s .22s cubic-bezier(.2,.7,.2,1) both; }
+.binde.neu.an .rolle { animation-delay: .32s; }
+.binde.neu.aus .karte { opacity: 1; clip-path: none; animation: nraus .4s cubic-bezier(.5,0,.8,.3) forwards; }
+.binde.neu.aus .streifen { transform: scaleY(1); }
+@keyframes nrein { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes nraus { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(12px); } }
+@keyframes nstreif { to { transform: scaleY(1); } }
+@keyframes ntext { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 /* ---------- Ecke: kleines Logo + LIVE ---------- */
 /* 14.11.2026: Logo und LIVE sitzen auf einer dunklen Platte, sonst ist das weiße „Singen“ auf hellem Bild nicht lesbar */
@@ -80,7 +104,7 @@ body[data-szene="bauchbinde"] #s-bauchbinde, body[data-szene="ecke"] #s-ecke { d
   <section class="szene" id="s-bauchbinde">
     <div class="binde" id="binde">
       <div class="wuerfel"></div>
-      <div class="karte"><div class="name" id="b-name"></div><div class="rolle" id="b-rolle"></div></div>
+      <div class="karte"><div class="streifen"></div><div class="text"><div class="name" id="b-name"></div><div class="rolle" id="b-rolle"></div></div></div>
     </div>
   </section>
 
@@ -119,14 +143,20 @@ body[data-szene="bauchbinde"] #s-bauchbinde, body[data-szene="ecke"] #s-ecke { d
     const d = (i * 0.045).toFixed(3) + 's'; w.style.animationDelay = d; w.style.setProperty('--d', d);
     wuerfel.appendChild(w);
   }
-  let timer;
+  let timer, wegTimer;
+  const BASIS = p.get('design') === '2' ? 'binde neu' : 'binde'; binde.className = BASIS;
   function zeigen(name, rolle, dauer) {
     clearTimeout(timer);
     $('b-name').textContent = name || ''; $('b-rolle').textContent = rolle || '';
-    binde.className = 'binde'; void binde.offsetWidth; binde.className = 'binde an';
+    clearTimeout(wegTimer);
+    binde.className = BASIS; void binde.offsetWidth; binde.className = BASIS + ' an';
     if (dauer > 0) timer = setTimeout(verstecken, dauer * 1000);
   }
-  function verstecken() { clearTimeout(timer); if (binde.classList.contains('an')) binde.className = 'binde aus'; }
+  // nach dem Ausblenden die Klasse ganz wegnehmen: dann ist sicher nichts mehr zu sehen
+  function verstecken() {
+    clearTimeout(timer); if (!binde.classList.contains('an')) return;
+    binde.className = BASIS + ' aus'; clearTimeout(wegTimer); wegTimer = setTimeout(() => { binde.className = BASIS; }, 1100);
+  }
   function befehl(b) {
     if (!b) return;
     if (b.typ === 'zeigen') { document.body.dataset.szene = 'bauchbinde'; zeigen(b.name, b.rolle, b.dauer); }
