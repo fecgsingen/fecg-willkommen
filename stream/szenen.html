@@ -47,7 +47,7 @@ body[data-szene="bauchbinde"] #s-bauchbinde, body[data-szene="ecke"] #s-ecke { d
 @keyframes aufziehen { to { clip-path: inset(0 0 0 0); } }
 @keyframes zuziehen { from { clip-path: inset(0 0 0 0); } to { clip-path: inset(0 100% 0 0); } }
 
-/* ---------- Bauchbinde, ruhige Fassung (?design=2): eine Platte wie die Logo-Ecke, schmaler Farbstreifen links ---------- */
+/* ---------- Bauchbinde, ruhige Fassung (Standard, alte Fassung mit &design=1): eine Platte wie die Logo-Ecke, schmaler Farbstreifen links ---------- */
 .binde.neu { left: 96px; bottom: 96px; filter: none; }
 .binde.neu .wuerfel { display: none; }
 .binde.neu .streifen { display: block; }
@@ -144,7 +144,7 @@ body[data-szene="bauchbinde"] #s-bauchbinde, body[data-szene="ecke"] #s-ecke { d
     wuerfel.appendChild(w);
   }
   let timer, wegTimer;
-  const BASIS = p.get('design') === '2' ? 'binde neu' : 'binde'; binde.className = BASIS;
+  const BASIS = p.get('design') === '1' ? 'binde' : 'binde neu'; // ruhige Fassung ist Standard seit 14.11.2026, die alte mit Würfeln: &design=1 binde.className = BASIS;
   function zeigen(name, rolle, dauer) {
     clearTimeout(timer);
     $('b-name').textContent = name || ''; $('b-rolle').textContent = rolle || '';
