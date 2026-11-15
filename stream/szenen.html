@@ -186,7 +186,7 @@ body[data-szene="bauchbinde"] #s-bauchbinde, body[data-szene="ecke"] #s-ecke { d
       <ellipse cx="32" cy="50" rx="27" ry="8" fill="none" stroke="#2f7a45" stroke-width="7"/>
       <ellipse cx="32" cy="50" rx="27" ry="8" fill="none" stroke="#46c85a" stroke-width="2" stroke-dasharray="3 5" opacity=".8"/>
       ${[12, 25, 39, 52].map((x, i) => `<rect x="${x - 3.5}" y="${30 + (i % 3 ? 2 : 0)}" width="7" height="${18 - (i % 3 ? 2 : 0)}" rx="1.5" fill="#e86a5a"/>` +
-        (i < n ? `<path class="flamme" d="M${x} ${17 + (i % 3 ? 2 : 0)} c4 5 4 9 0 11 c-4 -2 -4 -6 0 -11z" fill="#ffcf5a"/>` : `<line x1="${x}" y1="${28 + (i % 3 ? 2 : 0)}" x2="${x}" y2="${30 + (i % 3 ? 2 : 0)}" stroke="#c3c9da" stroke-width="1.5"/>`)).join('')}
+        (i < n ? /* Flamme in einer Gruppe mit unsichtbarem Rand: manche OBS-Fassungen schneiden bewegte SVG-Teile sonst an ihrer Kante ab (15.11.2026) */ `<g class="flamme"><rect x="${x - 8}" y="${11 + (i % 3 ? 2 : 0)}" width="16" height="17" fill="none"/><path d="M${x} ${17 + (i % 3 ? 2 : 0)} c4 5 4 9 0 11 c-4 -2 -4 -6 0 -11z" fill="#ffcf5a"/></g>` : `<line x1="${x}" y1="${28 + (i % 3 ? 2 : 0)}" x2="${x}" y2="${30 + (i % 3 ? 2 : 0)}" stroke="#c3c9da" stroke-width="1.5"/>`)).join('')}
       <circle cx="32" cy="58" r="2.5" fill="#e86a5a"/><circle cx="18" cy="56" r="2" fill="#e86a5a"/><circle cx="46" cy="56" r="2" fill="#e86a5a"/></svg>`,
     weihnachten: () => `<svg viewBox="0 0 64 64">
       <circle class="leuchten" cx="32" cy="32" r="22" fill="rgba(255,214,110,.22)"/>
