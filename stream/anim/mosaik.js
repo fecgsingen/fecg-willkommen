@@ -240,6 +240,29 @@ function lichter(t){
   x.globalCompositeOperation='source-over';
 }
 
+/* ---------- Kreuz aus Licht (Abendmahl, Karfreitag, Ostern) ---------- */
+function kreuz(t){
+  x.clearRect(0,0,W,H);
+  const cx=W/2,o=190,un=600,qy=320,qb=130;
+  const v=eio((t-.4)/1.4),h=eio((t-1.5)/.9),g=cl((t-2.2)/1.5)*(.75+.25*Math.sin(2*Math.PI*t/12));
+  if(g>0){const r=520,gr=x.createRadialGradient(cx,qy,0,cx,qy,r);gr.addColorStop(0,`rgba(150,180,255,${.30*g})`);gr.addColorStop(.4,`rgba(110,140,255,${.10*g})`);gr.addColorStop(1,'rgba(110,140,255,0)');x.fillStyle=gr;x.fillRect(cx-r,qy-r,2*r,2*r);}
+  x.lineCap='butt';x.strokeStyle='#fff';x.shadowColor='rgba(170,195,255,.95)';
+  for(const [lw,bl,al] of [[9,46,.55],[5,14,1]]){
+    x.lineWidth=lw;x.shadowBlur=bl;x.globalAlpha=al;
+    if(v>0){x.beginPath();x.moveTo(cx,un);x.lineTo(cx,un-(un-o)*v);x.stroke();}
+    if(h>0){x.beginPath();x.moveTo(cx-qb*h,qy);x.lineTo(cx+qb*h,qy);x.stroke();}
+  }
+  x.shadowBlur=0;x.globalAlpha=1;
+  /* Lichtpunkt an der Spitze, solange gezeichnet wird */
+  if(v>0&&v<1){const y=un-(un-o)*v,gr=x.createRadialGradient(cx,y,0,cx,y,70);gr.addColorStop(0,'rgba(255,255,255,.9)');gr.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=gr;x.fillRect(cx-70,y-70,140,140);}
+  $('ober').style.opacity=cl((t-2.6)/.8);
+  ws.forEach((s,i)=>{const p=eo((t-(2.4+i*.1))/.8);s.style.opacity=p;s.style.transform=`translateY(${(1-p)*30}px)`;});
+  const t2=2.9+ws.length*.1;
+  $('strip').style.transform=`scaleX(${eo((t-t2+.3)/1.0)})`;
+  $('strip').style.backgroundPosition=`${((Math.max(0,t-t2)/7)%1)*156}px 0`;
+  $('unter').style.opacity=cl((t-t2)/.9);
+}
+
 /* ---------- Tinte (wie im Startbild) ---------- */
 let tinte=()=>{};
 (()=>{const c=$('ink');if(!c)return;const gl=c.getContext('webgl',{preserveDrawingBuffer:true});if(!gl){c.remove();return;}
@@ -273,7 +296,8 @@ tinte=t=>{gl.uniform1f(ut,t);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);};
 })();
 
 /* ---------- Ablauf ---------- */
-const szene={intro,abspann,stinger:Q.get('art')==='balken'?balken:stinger,hintergrund,wellen,vers,titel,logoschleife,lichter}[MODE];
+const szene={intro,abspann,stinger:Q.get('art')==='balken'?balken:stinger,hintergrund,wellen,vers,titel,logoschleife,lichter,kreuz}[MODE];
+if(MODE==='kreuz'){const th=Q.get('thema')||'Abendmahl';$('thema').style.fontSize=(th.length>40?64:th.length>22?78:92)+'px';ws=woerter($('thema'),th);$('ober').textContent=Q.get('ober')||'';$('unter').textContent=Q.get('unter')||'';}
 if(MODE==='logoschleife'&&Q.get('text')){$('sub').textContent=Q.get('text');$('sub').style.opacity=1;}
 if(MODE==='vers')versAufbau();if(MODE==='titel')titelAufbau();
 if(MODE==='intro')textAufbau(Q.get('titel')||'Willkommen',Q.get('text')||'Der Gottesdienst beginnt in Kürze');
@@ -281,7 +305,7 @@ if(MODE==='abspann')textAufbau(Q.get('titel')||'Der Gottesdienst ist beendet',Q.
 const DAUER={intro:Infinity,abspann:Infinity,stinger:+(Q.get('pause')||1.5)+2,hintergrund:Infinity}[MODE]||Infinity;
 let hand=false;const SCHLEIFE=['hintergrund','wellen','logoschleife','lichter'].includes(MODE);const off=SCHLEIFE?0:Math.random()*1e4;
 window.SEEK=t=>{hand=true;tinte(500+(SCHLEIFE?0:t));szene(t);};
-window.DAUER_VIDEO={intro:10,abspann:8.5,stinger:2,hintergrund:24,wellen:24,logoschleife:24,lichter:24,vers:12,titel:8}[MODE];
+window.DAUER_VIDEO={intro:10,abspann:8.5,stinger:2,hintergrund:24,wellen:24,logoschleife:24,lichter:24,vers:12,titel:8,kreuz:10}[MODE];
 window.BEREIT=Promise.all([imgW.decode(),imgF.decode(),document.fonts.ready,document.fonts.load('600 50px InterD'),document.fonts.load('500 22px InterM')]).catch(()=>{});
 window.BEREIT.then(()=>{
   const t0=performance.now();
