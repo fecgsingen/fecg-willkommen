@@ -18,3 +18,17 @@ body.durchsichtig,html.durchsichtig{background:transparent}
 .bar .strip{position:absolute;inset:0;transform-origin:center;transform:scaleX(0);
   background:repeating-linear-gradient(90deg,#e86a5a 0 26px,#3bb2e0 26px 52px,#46c85a 52px 78px,#d6d446 78px 104px,#5a8ce6 104px 130px,#aa5adc 130px 156px);background-size:156px 100%}
 .sub{font-size:22px;letter-spacing:.34em;padding-left:.34em;color:#9aa3bd;margin-top:40px;text-transform:uppercase;text-align:center;opacity:0}
+/* Bibelvers */
+.versbuehne{position:absolute;inset:0;display:flex;align-items:center;padding:0 240px 60px 330px}
+#versblock{max-width:1300px}
+#verstext{font-family:"InterM",sans-serif;font-weight:500;line-height:1.32;letter-spacing:-.005em;text-wrap:pretty}
+.w{display:inline-block;opacity:0}
+.versfuss{display:flex;align-items:center;gap:28px;margin-top:44px}
+.versfuss .bar{margin-top:0;flex:none}.versfuss .strip{transform-origin:left}
+#stelle{font-size:26px;letter-spacing:.3em;text-transform:uppercase;color:#c3c9da;opacity:0}
+/* Titelkarte */
+.titelbuehne{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 160px 90px;text-align:center}
+#ober{font-size:26px;letter-spacing:.34em;padding-left:.34em;text-transform:uppercase;color:#9aa3bd;opacity:0;min-height:32px}
+#thema{font-family:"InterD",sans-serif;font-weight:600;line-height:1.08;letter-spacing:.02em;margin-top:30px;text-wrap:balance}
+#reihe{height:40px;width:240px;margin-top:46px}
+#unter{font-size:30px;letter-spacing:.3em;padding-left:.3em;text-transform:uppercase;color:#c3c9da;margin-top:44px;opacity:0;min-height:36px}
