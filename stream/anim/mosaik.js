@@ -123,6 +123,90 @@ function hintergrund(t){
   x.globalAlpha=1;
 }
 
+/* ---------- Stinger 2: Farbbalken ---------- */
+function balken(t){
+  x.clearRect(0,0,W,H);const h=H/6;
+  for(let i=0;i<6;i++){
+    const d=i*.06,y=i*h;
+    const cf=W*eo((t-d)/.5),nf=W*eo((t-d-.12)/.5);
+    const nl=W*ei((t-1.1-d)/.42),clx=W*ei((t-1.1-d-.12)/.42);
+    if(cf>clx){x.fillStyle=FARBEN[i];x.fillRect(clx,y,cf-clx,h+1);}
+    if(nf>nl){x.fillStyle=NAVY;x.fillRect(nl,y,nf-nl,h+1);}
+  }
+  const la=cl((t-.8)/.16)*(1-cl((t-1.08)/.16));
+  if(la>0){const lw=760,lh=lw*1488/3597;x.globalAlpha=la;const lx=(W-lw)/2,ly=(H-lh)/2;
+    if(imgF.complete)x.drawImage(imgF,lx,ly,lw,lh);if(imgW.complete)x.drawImage(imgW,lx,ly,lw,lh);x.globalAlpha=1;}
+}
+
+/* ---------- Wellen: sechs Farblinien, Schleife 24 s ---------- */
+function wellen(t){
+  x.clearRect(0,0,W,H);
+  const st=+(Q.get('staerke')||1),y0=+(Q.get('y')||790),u=2*Math.PI*t/24;
+  x.lineWidth=3;x.lineCap='round';
+  for(let i=0;i<6;i++){
+    x.beginPath();
+    for(let px=-20;px<=W+20;px+=10){
+      const k=px/W;
+      const y=y0+i*16+Math.sin(k*5.2+u*(1+i%2)+i*.55)*56*st+Math.sin(k*11.3-u*2+i*1.3)*20*st+Math.sin(k*2.1+u+i*.2)*46*st;
+      px<0?x.moveTo(px,y):x.lineTo(px,y);
+    }
+    x.strokeStyle=FARBEN[i];x.shadowColor=FARBEN[i];x.shadowBlur=22;x.globalAlpha=.8;x.stroke();
+  }
+  x.shadowBlur=0;x.globalAlpha=1;
+}
+
+/* ---------- Wörter einzeln aufbauen ---------- */
+function woerter(el,text){
+  el.textContent='';const out=[];
+  text.split(/\s+/).forEach((w,i)=>{if(i)el.appendChild(document.createTextNode(' '));const s=document.createElement('span');s.className='w';s.textContent=w;el.appendChild(s);out.push(s);});
+  return out;
+}
+let ws=[],rect=null;
+
+/* ---------- Bibelvers ---------- */
+function versAufbau(){
+  const text=Q.get('text')||'Denn so sehr hat Gott die Welt geliebt, dass er seinen eingeborenen Sohn gab, damit jeder, der an ihn glaubt, nicht verloren geht, sondern ewiges Leben hat.';
+  const v=$('verstext');v.style.fontSize=(text.length>260?46:text.length>150?56:text.length>70?66:78)+'px';
+  ws=woerter(v,text);$('stelle').textContent=Q.get('stelle')||'Johannes 3,16';
+}
+function vers(t){
+  x.clearRect(0,0,W,H);
+  if(!rect)rect=$('versblock').getBoundingClientRect();
+  const k=28,n=Math.max(4,Math.round(rect.height/k)),kk=rect.height/n,sx=rect.left-70;
+  for(let i=0;i<n;i++){const a=back((t-(.3+i*.045))/.45);if(a>0)quad(sx,rect.top+kk*(i+.5),kk*a,FARBEN[i%6]);}
+  const t1=.3+n*.045;
+  ws.forEach((s,i)=>{const p=eo((t-(t1+i*.07))/.7);s.style.opacity=p;s.style.transform=`translateY(${(1-p)*18}px)`;});
+  const t2=t1+ws.length*.07+.3;
+  $('stelle').style.opacity=cl((t-t2)/.9);
+  $('strip').style.transform=`scaleX(${eo((t-t2+.2)/1.0)})`;
+  $('strip').style.backgroundPosition=`${((Math.max(0,t-t2)/7)%1)*156}px 0`;
+  logo(cl((t-t2)/1)*.95,1,cl((t-t2)/1),W-150-230,H-90-95,230);
+}
+
+/* ---------- Titelkarte (Thema, Abendmahl, Gebet …) ---------- */
+function titelAufbau(){
+  const th=Q.get('thema')||'Abendmahl';
+  const h=$('thema');h.style.fontSize=(th.length>40?84:th.length>22?104:132)+'px';
+  ws=woerter(h,th);
+  $('ober').textContent=Q.get('ober')||'';$('unter').textContent=Q.get('unter')||'';
+}
+function titel(t){
+  x.clearRect(0,0,W,H);
+  if(!rect)rect=$('reihe').getBoundingClientRect();
+  const k=40,n=W/k,cy=rect.top+rect.height/2,mitte=W/2;
+  for(let i=0;i<n;i++){
+    const cx=i*k+k/2,j=Math.round((cx-mitte)/k+.5),bleibt=j>=-2&&j<=3;
+    const a=back((t-(.2+i*.014))/.35);if(a<=0)continue;
+    const f=FARBEN[bleibt?j+2:(i*5+3)%6];
+    if(bleibt)quad(cx,cy,k*a,f);
+    else{const b=ei((t-(1.15+(1-Math.abs(cx-mitte)/mitte)*.45))/.4);if(b<1)quad(cx+(mitte-cx)*b*.25,cy,k*a*(1-b),f);}
+  }
+  $('ober').style.opacity=cl((t-1.5)/.8);
+  ws.forEach((s,i)=>{const p=eo((t-(1.35+i*.1))/.8);s.style.opacity=p;s.style.transform=`translateY(${(1-p)*34}px)`;});
+  $('unter').style.opacity=cl((t-(1.9+ws.length*.1))/.9);
+  logo(cl((t-2.2)/1)*.95,1,cl((t-2.2)/1),(W-230)/2,H-80-95,230);
+}
+
 /* ---------- Tinte (wie im Startbild) ---------- */
 let tinte=()=>{};
 (()=>{const c=$('ink');if(!c)return;const gl=c.getContext('webgl',{preserveDrawingBuffer:true});if(!gl){c.remove();return;}
@@ -156,13 +240,14 @@ tinte=t=>{gl.uniform1f(ut,t);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);};
 })();
 
 /* ---------- Ablauf ---------- */
-const szene={intro,abspann,stinger,hintergrund}[MODE];
+const szene={intro,abspann,stinger:Q.get('art')==='balken'?balken:stinger,hintergrund,wellen,vers,titel}[MODE];
+if(MODE==='vers')versAufbau();if(MODE==='titel')titelAufbau();
 if(MODE==='intro')textAufbau(Q.get('titel')||'Willkommen',Q.get('text')||'Der Gottesdienst beginnt in Kürze');
 if(MODE==='abspann')textAufbau(Q.get('titel')||'Der Gottesdienst ist beendet',Q.get('text')||'Gottes Segen für deine Woche');
-const DAUER={intro:Infinity,abspann:Infinity,stinger:+(Q.get('pause')||1.5)+2,hintergrund:Infinity}[MODE];
-let hand=false;const off=MODE==='hintergrund'?0:Math.random()*1e4;
-window.SEEK=t=>{hand=true;tinte(500+(MODE==='hintergrund'?0:t));szene(t);};
-window.DAUER_VIDEO={intro:10,abspann:8.5,stinger:2,hintergrund:24}[MODE];
+const DAUER={intro:Infinity,abspann:Infinity,stinger:+(Q.get('pause')||1.5)+2,hintergrund:Infinity}[MODE]||Infinity;
+let hand=false;const SCHLEIFE=MODE==='hintergrund'||MODE==='wellen';const off=SCHLEIFE?0:Math.random()*1e4;
+window.SEEK=t=>{hand=true;tinte(500+(SCHLEIFE?0:t));szene(t);};
+window.DAUER_VIDEO={intro:10,abspann:8.5,stinger:2,hintergrund:24,wellen:24,vers:12,titel:8}[MODE];
 window.BEREIT=Promise.all([imgW.decode(),imgF.decode(),document.fonts.ready,document.fonts.load('600 50px InterD'),document.fonts.load('500 22px InterM')]).catch(()=>{});
 window.BEREIT.then(()=>{
   const t0=performance.now();
