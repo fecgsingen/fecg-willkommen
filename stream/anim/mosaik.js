@@ -207,6 +207,39 @@ function titel(t){
   logo(cl((t-2.2)/1)*.95,1,cl((t-2.2)/1),(W-230)/2,H-80-95,230);
 }
 
+/* ---------- Logo-Schleife: die Farbsäule lebt (24 s) ---------- */
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const misch=(a,b,p)=>{const A=hex(a),B=hex(b);return `rgb(${A.map((v,i)=>Math.round(v+(B[i]-v)*p)).join(',')})`;};
+const LEBT=SAEULE.map(([c,r,f],j)=>{const per=[6,8,12][j%3];return {c,r,f,per,sch:per===8?2:3,ph:(j*2.7)%per};});
+function logoschleife(t){
+  x.clearRect(0,0,W,H);
+  const lw=+(Q.get('breite')||900),k=lw/3597,lh=1488*k,lx=(W-lw)/2,ly=(H-lh)/2-(Q.get('text')?40:0);
+  const px=lx+(469+183)*k,py=ly+lh/2,g=.5+.5*Math.sin(2*Math.PI*t/12);
+  const r=lh*1.5,gr=x.createRadialGradient(px,py,0,px,py,r);gr.addColorStop(0,`rgba(120,150,255,${.10+.10*g})`);gr.addColorStop(1,'rgba(120,150,255,0)');
+  x.fillStyle=gr;x.fillRect(px-r,py-r,2*r,2*r);
+  for(const z of LEBT){
+    const u=(t+z.ph)/z.per,n=Math.floor(u),p=eio((u-n-(1-1.4/z.per))/(1.4/z.per));
+    x.fillStyle=misch(FARBEN[(z.f+n*z.sch)%6],FARBEN[(z.f+(n+1)*z.sch)%6],p);
+    x.fillRect(lx+(469+122*z.c)*k-.5,ly+(4+122*z.r)*k-.5,122*k+1,122*k+1);
+  }
+  if(imgW.complete)x.drawImage(imgW,lx,ly,lw,lh);
+}
+
+/* ---------- Lichter: sechs weiche Lichtkegel (24 s) ---------- */
+function lichter(t){
+  x.clearRect(0,0,W,H);
+  const st=+(Q.get('staerke')||1),u=2*Math.PI*t/24;
+  x.globalCompositeOperation='lighter';
+  for(let i=0;i<6;i++){
+    const cx=W*(i+.5)/6+Math.sin(u*(1+i%2)+i*1.1)*110,a=(.42+.16*Math.sin(u*(2+i%3)+i*2.3))*st,rr=230;
+    x.save();x.translate(cx,H+60);x.scale(1,4.2);
+    const [R,G,B]=hex(FARBEN[i]);const gr=x.createRadialGradient(0,0,0,0,0,rr);
+    gr.addColorStop(0,`rgba(${R},${G},${B},${a})`);gr.addColorStop(.5,`rgba(${R},${G},${B},${a*.4})`);gr.addColorStop(1,`rgba(${R},${G},${B},0)`);
+    x.fillStyle=gr;x.fillRect(-rr,-rr,2*rr,2*rr);x.restore();
+  }
+  x.globalCompositeOperation='source-over';
+}
+
 /* ---------- Tinte (wie im Startbild) ---------- */
 let tinte=()=>{};
 (()=>{const c=$('ink');if(!c)return;const gl=c.getContext('webgl',{preserveDrawingBuffer:true});if(!gl){c.remove();return;}
@@ -240,18 +273,19 @@ tinte=t=>{gl.uniform1f(ut,t);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);};
 })();
 
 /* ---------- Ablauf ---------- */
-const szene={intro,abspann,stinger:Q.get('art')==='balken'?balken:stinger,hintergrund,wellen,vers,titel}[MODE];
+const szene={intro,abspann,stinger:Q.get('art')==='balken'?balken:stinger,hintergrund,wellen,vers,titel,logoschleife,lichter}[MODE];
+if(MODE==='logoschleife'&&Q.get('text')){$('sub').textContent=Q.get('text');$('sub').style.opacity=1;}
 if(MODE==='vers')versAufbau();if(MODE==='titel')titelAufbau();
 if(MODE==='intro')textAufbau(Q.get('titel')||'Willkommen',Q.get('text')||'Der Gottesdienst beginnt in Kürze');
 if(MODE==='abspann')textAufbau(Q.get('titel')||'Der Gottesdienst ist beendet',Q.get('text')||'Gottes Segen für deine Woche');
 const DAUER={intro:Infinity,abspann:Infinity,stinger:+(Q.get('pause')||1.5)+2,hintergrund:Infinity}[MODE]||Infinity;
-let hand=false;const SCHLEIFE=MODE==='hintergrund'||MODE==='wellen';const off=SCHLEIFE?0:Math.random()*1e4;
+let hand=false;const SCHLEIFE=['hintergrund','wellen','logoschleife','lichter'].includes(MODE);const off=SCHLEIFE?0:Math.random()*1e4;
 window.SEEK=t=>{hand=true;tinte(500+(SCHLEIFE?0:t));szene(t);};
-window.DAUER_VIDEO={intro:10,abspann:8.5,stinger:2,hintergrund:24,wellen:24,vers:12,titel:8}[MODE];
+window.DAUER_VIDEO={intro:10,abspann:8.5,stinger:2,hintergrund:24,wellen:24,logoschleife:24,lichter:24,vers:12,titel:8}[MODE];
 window.BEREIT=Promise.all([imgW.decode(),imgF.decode(),document.fonts.ready,document.fonts.load('600 50px InterD'),document.fonts.load('500 22px InterM')]).catch(()=>{});
 window.BEREIT.then(()=>{
   const t0=performance.now();
-  const loop=now=>{if(hand)return;const t=(now-t0)/1000;tinte(off+t);szene(DAUER===Infinity?t:t%DAUER);requestAnimationFrame(loop);};
+  const loop=now=>{if(hand)return;const t=Math.max(0,(now-t0)/1000);tinte(off+t);szene(DAUER===Infinity?t:t%DAUER);requestAnimationFrame(loop);};
   requestAnimationFrame(loop);
 });
 })();
