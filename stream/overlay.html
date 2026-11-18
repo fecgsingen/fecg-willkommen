@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>FECG Stream – Einblendungen</title>
+<meta name="robots" content="noindex">
+<!--
+  OBS Browserquelle, 1920x1080, durchsichtig, bleibt dauerhaft eingeschaltet.
+  Bibelvers und Hinweis werden live aus dem OBS-Dock „Einblendungen“ (bauchbinde-steuerung.html) gesteuert.
+  Test ohne Dock: overlay.html?test=vers  oder  ?test=hinweis
+-->
+<style>
+@font-face{font-family:"InterFECG";src:url(../inter-500.woff2) format("woff2");font-weight:400 500}
+@font-face{font-family:"InterFECG";src:url(../inter-600.woff2) format("woff2");font-weight:600 800}
+:root{--text:#fff;--muted:#c3c9da;--rot:#e86a5a;--cyan:#3bb2e0;--gruen:#46c85a;--gelb:#d6d446;--blau:#5a8ce6;--lila:#aa5adc}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:transparent}
+body{font:500 16px/1.4 "InterFECG","Inter",system-ui,"Segoe UI",sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+#buehne{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden}
+.platte{position:absolute;display:flex;align-items:stretch;gap:26px;border-radius:18px;background:rgba(10,13,23,.86);box-shadow:0 10px 30px rgba(0,0,0,.30);opacity:0;visibility:hidden}
+.platte .streifen{flex:none;width:6px;border-radius:3px;transform:scaleY(0);background:linear-gradient(180deg,var(--rot) 0 16.66%,var(--cyan) 16.66% 33.33%,var(--gruen) 33.33% 50%,var(--gelb) 50% 66.66%,var(--blau) 66.66% 83.33%,var(--lila) 83.33%)}
+.platte .text{min-width:0}
+.platte.an{visibility:visible;animation:rein .6s cubic-bezier(.2,.7,.2,1) forwards}
+.platte.an .streifen{animation:streif .6s .15s cubic-bezier(.2,.7,.2,1) forwards}
+.platte.an .zeile{animation:txt .55s .22s cubic-bezier(.2,.7,.2,1) both}
+.platte.an .stelle{animation:txt .55s .34s cubic-bezier(.2,.7,.2,1) both}
+.platte.aus{visibility:visible;opacity:1;animation:raus .4s cubic-bezier(.5,0,.8,.3) forwards}
+.platte.aus .streifen{transform:scaleY(1)}
+@keyframes rein{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes raus{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px)}}
+@keyframes streif{to{transform:scaleY(1)}}
+@keyframes txt{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* Bibelvers: unten links, wie die Bauchbinde */
+#vers{left:96px;bottom:96px;max-width:1380px;padding:26px 44px 28px 24px}
+#vers .zeile{font-size:48px;font-weight:500;line-height:1.28;letter-spacing:-.005em}
+#vers .stelle{margin-top:14px;font-size:24px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+/* Hinweis: oben links, damit er die Bauchbinde nicht überdeckt */
+#hinweis{left:96px;top:56px;max-width:1300px;padding:16px 36px 16px 20px}
+#hinweis .zeile{font-size:34px;font-weight:500;line-height:1.25}
+</style>
+</head>
+<body>
+<div id="buehne">
+  <div class="platte" id="vers"><div class="streifen"></div><div class="text"><div class="zeile" id="v-text"></div><div class="stelle" id="v-stelle"></div></div></div>
+  <div class="platte" id="hinweis"><div class="streifen"></div><div class="text"><div class="zeile" id="h-text"></div></div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id),p=new URLSearchParams(location.search);
+function skalieren(){const s=Math.min(innerWidth/1920,innerHeight/1080);$('buehne').style.transform=`scale(${s})`}
+addEventListener('resize',skalieren);skalieren();
+
+const zustand={};  /* je Platte: {timer, weg} */
+function zeigen(el,dauer){
+  const z=zustand[el.id]||(zustand[el.id]={});clearTimeout(z.timer);clearTimeout(z.weg);
+  el.className='platte';void el.offsetWidth;el.className='platte an';
+  if(dauer>0)z.timer=setTimeout(()=>verstecken(el),dauer*1000);
+}
+function verstecken(el){
+  const z=zustand[el.id]||(zustand[el.id]={});clearTimeout(z.timer);
+  if(!el.classList.contains('an'))return;
+  el.className='platte aus';clearTimeout(z.weg);z.weg=setTimeout(()=>{el.className='platte'},700);
+}
+function vers(text,stelle,dauer){
+  const n=(text||'').length;
+  $('v-text').style.fontSize=(n>260?34:n>170?40:n>90?44:52)+'px';
+  $('v-text').textContent=text||'';$('v-stelle').textContent=stelle||'';$('v-stelle').style.display=stelle?'':'none';
+  zeigen($('vers'),dauer);
+}
+function hinweis(text,dauer){$('h-text').textContent=text||'';zeigen($('hinweis'),dauer)}
+function befehl(b){
+  if(!b)return;
+  if(b.typ==='vers'&&b.text)vers(b.text,b.stelle,b.dauer);
+  if(b.typ==='hinweis'&&b.text)hinweis(b.text,b.dauer);
+  if(b.typ==='aus'){verstecken($('vers'));verstecken($('hinweis'))}
+}
+try{new BroadcastChannel('fecg-stream').onmessage=e=>befehl(e.data)}catch{}
+addEventListener('storage',e=>{if(e.key==='fecg-stream')try{befehl(JSON.parse(e.newValue))}catch{}});
+addEventListener('message',e=>befehl(e.data));
+
+if(p.get('test')==='vers')setTimeout(()=>vers('Denn so sehr hat Gott die Welt geliebt, dass er seinen eingeborenen Sohn gab, damit jeder, der an ihn glaubt, nicht verloren geht, sondern ewiges Leben hat.','Johannes 3,16',0),400);
+if(p.get('test')==='hinweis')setTimeout(()=>hinweis('Nach dem Gottesdienst laden wir herzlich zum Kaffee im Foyer ein.',0),400);
+</script>
+</body>
+</html>

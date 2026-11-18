@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<title>Bauchbinde</title>
+<title>Einblendungen</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <style>
@@ -31,6 +31,10 @@ input[type=text] { width: 100%; height: 48px; padding: 0 14px; border-radius: 12
 input[type=text]::placeholder { color: #5c6583; }
 input[type=text]:focus { border-color: var(--blau); box-shadow: 0 0 0 3px rgba(90,140,230,.25); }
 .felder { display: grid; gap: 12px; }
+.modus { display: grid; grid-template-columns: repeat(3, 1fr); padding: 3px; border-radius: 12px; background: var(--feld); border: 1px solid var(--linie); }
+.modus button { height: 36px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font: 600 14px/1 inherit; font-family: inherit; cursor: pointer; }
+.modus button[aria-pressed=true] { background: #26304f; color: var(--text); }
+label[hidden] { display: none; }
 
 .dauer { display: grid; gap: 6px; }
 .dauer > span { font-size: 12px; font-weight: 600; color: var(--leise); letter-spacing: .04em; }
@@ -70,13 +74,19 @@ button:focus-visible { outline: 2px solid var(--blau); outline-offset: 2px; }
 <div class="rand"></div>
 <main>
   <div class="kopf">
-    <h1>Bauchbinde</h1>
+    <h1>Einblendung</h1>
     <div class="stand" id="stand"><span>Nichts eingeblendet</span></div>
   </div>
 
+  <div class="modus" id="modus">
+    <button type="button" data-m="bauchbinde">Bauchbinde</button>
+    <button type="button" data-m="vers">Bibelvers</button>
+    <button type="button" data-m="hinweis">Hinweis</button>
+  </div>
+
   <div class="felder">
-    <label>Name<input type="text" id="name" placeholder="z. B. Johannes Schmidt" autocomplete="off"></label>
-    <label>Zeile darunter<input type="text" id="rolle" placeholder="z. B. Predigt · Johannes 1" autocomplete="off"></label>
+    <label><span id="la">Name</span><input type="text" id="name" placeholder="z. B. Johannes Schmidt" autocomplete="off"></label>
+    <label id="lbw"><span id="lb">Zeile darunter</span><input type="text" id="rolle" placeholder="z. B. Predigt · Johannes 1" autocomplete="off"></label>
   </div>
 
   <div class="dauer">
@@ -124,9 +134,16 @@ function stand(name) {
   s.firstElementChild.textContent = name ? 'Eingeblendet: ' + name : 'Nichts eingeblendet';
 }
 const aktuell = () => ({ name: $('name').value.trim(), rolle: $('rolle').value.trim(), dauer });
+// Drei Arten: Bauchbinde (Quelle szenen.html?szene=bauchbinde), Bibelvers und Hinweis (Quelle overlay.html)
+const MODI = {
+  bauchbinde: { liste: 'fecg-stream-liste', a: 'Name', pa: 'z. B. Johannes Schmidt', b: 'Zeile darunter', pb: 'z. B. Predigt · Johannes 1', paket: (a) => ({ typ: 'zeigen', name: a.name, rolle: a.rolle, dauer: a.dauer }), leer: 'Namen eintippen und „Aktuellen Text merken“ drücken' },
+  vers: { liste: 'fecg-stream-liste-vers', a: 'Vers', pa: 'Text des Verses', b: 'Stelle', pb: 'z. B. Johannes 3,16', paket: (a) => ({ typ: 'vers', text: a.name, stelle: a.rolle, dauer: a.dauer }), leer: 'Vers eintippen und „Aktuellen Text merken“ drücken' },
+  hinweis: { liste: 'fecg-stream-liste-hinweis', a: 'Hinweis', pa: 'z. B. Nach dem Gottesdienst: Kaffee im Foyer', b: null, paket: (a) => ({ typ: 'hinweis', text: a.name, dauer: a.dauer }), leer: 'Text eintippen und „Aktuellen Text merken“ drücken' },
+};
+let modus = lesen('fecg-stream-modus', 'bauchbinde'); if (!MODI[modus]) modus = 'bauchbinde';
 function einblenden() {
   const a = aktuell(); if (!a.name) { $('name').focus(); return; }
-  senden({ typ: 'zeigen', ...a }); stand(a.name);
+  senden(MODI[modus].paket(a)); stand(a.name);
   if (a.dauer > 0) standTimer = setTimeout(() => stand(''), a.dauer * 1000 + 600);
 }
 function ausblenden() { senden({ typ: 'aus' }); stand(''); }
@@ -140,11 +157,11 @@ for (const f of [$('name'), $('rolle')]) {
 knoepfe();
 
 // Gemerkte Texte (Prediger, Moderation, Kollekte …) bleiben auf diesem Rechner gespeichert
-const liste = () => lesen('fecg-stream-liste', []);
+const liste = () => lesen(MODI[modus].liste, []);
 function zeichnen() {
   const box = $('liste'); box.textContent = '';
   const l = liste();
-  if (!l.length) { const t = document.createElement('p'); t.className = 'leer'; t.textContent = 'Noch nichts gemerkt. Namen eintippen und „Aktuellen Text merken“ drücken, dann reicht beim nächsten Mal ein Klick.'; box.append(t); return; }
+  if (!l.length) { const t = document.createElement('p'); t.className = 'leer'; t.textContent = 'Noch nichts gemerkt. ' + MODI[modus].leer + ', dann reicht beim nächsten Mal ein Klick.'; box.append(t); return; }
   l.forEach((e, i) => {
     const z = document.createElement('div'); z.className = 'eintrag';
     const los = document.createElement('button'); los.type = 'button'; los.className = 'los'; los.title = 'Einblenden';
@@ -152,16 +169,24 @@ function zeichnen() {
     los.append(b, s);
     los.onclick = () => { $('name').value = e.name; $('rolle').value = e.rolle || ''; knoepfe(); einblenden(); };
     const weg = document.createElement('button'); weg.type = 'button'; weg.className = 'weg'; weg.textContent = '×'; weg.title = 'Aus der Liste löschen'; weg.setAttribute('aria-label', e.name + ' löschen');
-    weg.onclick = () => { const n = liste(); n.splice(i, 1); schreiben('fecg-stream-liste', n); zeichnen(); };
+    weg.onclick = () => { const n = liste(); n.splice(i, 1); schreiben(MODI[modus].liste, n); zeichnen(); };
     z.append(los, weg); box.append(z);
   });
 }
 $('merken').onclick = () => {
   const a = aktuell(); if (!a.name) return;
   const l = liste().filter((e) => e.name !== a.name || (e.rolle || '') !== a.rolle);
-  l.unshift({ name: a.name, rolle: a.rolle }); schreiben('fecg-stream-liste', l.slice(0, 12)); zeichnen();
+  l.unshift({ name: a.name, rolle: a.rolle }); schreiben(MODI[modus].liste, l.slice(0, 12)); zeichnen();
 };
-zeichnen();
+function modusZeichnen() {
+  const m = MODI[modus];
+  for (const b of $('modus').children) b.setAttribute('aria-pressed', String(b.dataset.m === modus));
+  $('la').textContent = m.a; $('name').placeholder = m.pa;
+  $('lbw').hidden = !m.b; if (m.b) { $('lb').textContent = m.b; $('rolle').placeholder = m.pb; } else $('rolle').value = '';
+  zeichnen();
+}
+$('modus').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; modus = b.dataset.m; schreiben('fecg-stream-modus', modus); modusZeichnen(); };
+modusZeichnen();
 </script>
 </body>
 </html>
